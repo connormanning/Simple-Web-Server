@@ -88,16 +88,23 @@ namespace SimpleWeb {
       }
 
       /// Use this function if you need to recursively send parts of a longer message
-      void send(const std::function<void(const error_code &)> &callback = nullptr) noexcept {
+      void send(const std::function<void(const error_code &)> &callback = nullptr, std::size_t id = 0) noexcept {
         session->connection->set_timeout(timeout_content);
         auto self = this->shared_from_this(); // Keep Response instance alive through the following async_write
-        asio::async_write(*session->connection->socket, streambuf, [self, callback](const error_code &ec, std::size_t /*bytes_transferred*/) {
+        std::cout << "S" << id << std::endl;
+        asio::async_write(*session->connection->socket, streambuf, [self, callback, id](const error_code &ec, std::size_t /*bytes_transferred*/) {
+          std::cout << "G" << id << std::endl;
           self->session->connection->cancel_timeout();
+          std::cout << "H" << id << std::endl;
           auto lock = self->session->connection->handler_runner->continue_lock();
+          std::cout << "L" << id << " " << !!lock << std::endl;
           if(!lock)
             return;
           if(callback)
+          {
+            std::cout << "F" << id << std::endl;
             callback(ec);
+          }
         });
       }
 
